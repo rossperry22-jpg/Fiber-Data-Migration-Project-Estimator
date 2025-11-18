@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geograph Technologies - Fiber Data Migration Estimator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --geograph-purple: #6a0dad;
+            --geograph-purple-light: #8a4fbf;
+            --geograph-purple-dark: #4b0082;
+            --geograph-accent: #ff6b00;
+            --geograph-accent-light: #ff8c42;
+            --text-dark: #333;
+            --text-light: #666;
+            --bg-light: #f9f7fd;
+            --border-color: #e0d6f0;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --card-shadow: 0 10px 30px rgba(106, 13, 173, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #f9f7fd 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--geograph-purple), var(--geograph-purple-dark));
+            color: white;
+            padding: 25px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-icon {
+            font-size: 2.8rem;
+            color: white;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        
+        .logo-text {
+            font-size: 2rem;
+            font-weight: 800;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .tagline {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-top: 5px;
+            font-weight: 300;
+        }
+        
+        .contact-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.15);
+            padding: 10px 20px;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        main {
+            padding: 40px 0;
+        }
+        
+        .workflow-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .workflow-steps::before {
+            content: "";
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--border-color);
+            z-index: 1;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+        
+        .step-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--geograph-purple);
+            border: 3px solid var(--border-color);
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .step.active .step-icon {
+            background: var(--geograph-purple);
+            color: white;
+            border-color: var(--geograph-purple);
+            box-shadow: 0 4px 10px rgba(106, 13, 173, 0.3);
+        }
+        
+        .step-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            color: var(--text-light);
+        }
+        
+        .step.active .step-label {
+            color: var(--geograph-purple);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            padding: 35px;
+            margin-bottom: 30px;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(106, 13, 173, 0.05);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(106, 13, 173, 0.15);
+        }
+        
+        h1, h2, h3 {
+            color: var(--geograph-purple);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 2.4rem;
+            text-align: center;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--geograph-purple), var(--geograph-purple-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+        
+        h2 {
+            font-size: 1.9rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 12px;
+            font-weight: 700;
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            margin-top: 25px;
+            font-weight: 600;
+        }
+        
+        .intro {
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto 40px;
+            font-size: 1.2rem;
+            color: var(--text-light);
+            line-height: 1.7;
+        }
+        
+        .form-section {
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.05rem;
+        }
+        
+        select, input, textarea {
+            width: 100%;
+            padding: 15px 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--geograph-purple);
+            box-shadow: 0 0 0 4px rgba(106, 13, 173, 0.15);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-light);
+            padding: 12px 18px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            flex: 1 0 200px;
+        }
+        
+        .checkbox-item:hover {
+            background: #f0ebf9;
+            transform: translateY(-2px);
+        }
+        
+        .checkbox-item input {
+            width: auto;
+            transform: scale(1.2);
+        }
+        
+        .conditional-question {
+            margin-top: 15px;
+            margin-left: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f9f7fd, #f0ebf9);
+            border-radius: 12px;
+            border-left: 5px solid var(--geograph-purple);
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--geograph-purple), var(--geograph-purple-dark));
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(106, 13, 173, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(106, 13, 173, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--geograph-purple);
+            border: 2px solid var(--geograph-purple);
+            box-shadow: 0 4px 10px rgba(106, 13, 173, 0.1);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-light);
+        }
+        
+        .btn-accent {
+            background: linear-gradient(135deg, var(--geograph-accent), var(--geograph-accent-light));
+            box-shadow: 0 4px 15px rgba(255, 107, 0, 0.3);
+        }
+        
+        .btn-accent:hover {
+            box-shadow: 0 8px 25px rgba(255, 107, 0, 0.4);
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+        
+        .stage-section {
+            display: none;
+        }
+        
+        .stage-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .summary-card {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .summary-item {
+            background: linear-gradient(135deg, #f9f7fd, #f0ebf9);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            transition: all 0.4s;
+            border: 1px solid rgba(106, 13, 173, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .summary-item::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--geograph-purple), var(--geograph-accent));
+        }
+        
+        .summary-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(106, 13, 173, 0.15);
+        }
+        
+        .summary-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--geograph-purple);
+            margin: 15px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .summary-label {
+            font-size: 1rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .critical-item {
+            color: var(--danger);
+            font-weight: 600;
+        }
+        
+        .warning-item {
+            color: var(--warning);
+            font-weight: 600;
+        }
+        
+        .timeline-container {
+            margin: 40px 0;
+            height: 350px;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .assumptions-list, .dependency-list {
+            list-style-type: none;
+            margin-top: 15px;
+        }
+        
+        .assumptions-list li, .dependency-list li {
+            margin-bottom: 15px;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .assumptions-list li:before {
+            content: "✓";
+            color: var(--success);
+            font-weight: bold;
+            position: absolute;
+            left: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .dependency-list li:before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+            font-size: 1.2rem;
+        }
+        
+        .disclaimer {
+            background: linear-gradient(135deg, #fff9e6, #fff0cc);
+            border-left: 5px solid var(--warning);
+            padding: 25px;
+            margin-top: 40px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.1);
+        }
+        
+        footer {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            margin-top: 60px;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .footer-logo {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 25px;
+        }
+        
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+            font-weight: 500;
+        }
+        
+        .footer-links a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+        
+        .progress-container {
+            margin: 40px 0;
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--geograph-purple), var(--geograph-accent));
+        }
+        
+        .progress-bar {
+            height: 12px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--geograph-purple-light), var(--geograph-purple));
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.7s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .key-area-section {
+            background: var(--bg-light);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid var(--geograph-purple);
+        }
+        
+        .key-area-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .key-area-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--geograph-purple);
+        }
+        
+        .completion-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--success), #2ecc71);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);
+        }
+        
+        .mop-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .mop-info h4 {
+            color: var(--geograph-purple);
+            margin-bottom: 10px;
+        }
+        
+        .stage-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .stage-actions .btn {
+            flex: 1;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 25px;
+            }
+            
+            .actions {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .checkbox-item {
+                flex: 1 0 100%;
+            }
+            
+            .workflow-steps {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            
+            .workflow-steps::before {
+                display: none;
+            }
+            
+            .step {
+                flex: 0 0 calc(50% - 10px);
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-satellite-dish"></i>
+                    </div>
+                    <div>
+                        <div class="logo-text">GEOGRAPH TECHNOLOGIES</div>
+                        <div class="tagline">Fiber Data Migration Solutions</div>
+                    </div>
+                </div>
+                <div class="contact-info">
+                    <i class="fas fa-phone"></i> 1-800-GEOGRAPH
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <h1>Fiber Data Migration Project Estimator</h1>
+        <p class="intro">
+            This tool follows the Geograph M.O.P. workflow to help accurately scope and estimate fiber data migration projects. 
+            Complete each stage to progress through the project lifecycle.
+        </p>
+
+        <div class="workflow-steps">
+            <div class="step active" id="step-discovery">
+                <div class="step-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="step-label">Discovery</div>
+            </div>
+            <div class="step" id="step-negotiating">
+                <div class="step-icon">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <div class="step-label">Negotiating</div>
+            </div>
+            <div class="step" id="step-proposal">
+                <div class="step-icon">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <div class="step-label">Proposal</div>
+            </div>
+            <div class="step" id="step-closed-won">
+                <div class="step-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="step-label">Closed Won</div>
+            </div>
+            <div class="step" id="step-kickoff">
+                <div class="step-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="step-label">Project Kickoff</div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-text">
+                <span>Stage Progress</span>
+                <span id="progress-percent">0%</span>
+            </div>
+        </div>
+
+        <!-- DISCOVERY STAGE -->
+        <div class="card stage-section active" id="discovery-stage">
+            <h2>Discovery Stage <span class="completion-badge" id="discovery-badge" style="display: none;">Complete!</span></h2>
+            
+            <div class="mop-info">
+                <h4><i class="fas fa-info-circle"></i> Stage Information</h4>
+                <p><strong>Stage Owner:</strong> Deal Owner (DO)</p>
+                <p>During the Discovery phase, the Deal Owner leads communication with the prospect/customer. No monetary values are added during this phase. The goal is to gather information related to the 7 key areas of interest.</p>
+            </div>
+
+            <div class="form-section">
+                <h3>Organization & Contact Information</h3>
+                <div class="form-group">
+                    <label for="company-name">Company Name</label>
+                    <input type="text" id="company-name" placeholder="Enter company name">
+                </div>
+                <div class="form-group">
+                    <label for="contact-name">Primary Contact</label>
+                    <input type="text" id="contact-name" placeholder="Full name">
+                </div>
+                <div class="form-group">
+                    <label for="contact-role">Contact Role/Title</label>
+                    <input type="text" id="contact-role" placeholder="e.g., GIS Manager, IT Director">
+                </div>
+            </div>
+
+            <div class="key-area-section">
+                <div class="key-area-header">
+                    <div class="key-area-title">1. Decision Making Process</div>
+                    <span class="completion-badge" id="decision-badge" style="display: none;">Complete</span>
+                </div>
+                <div class="form-group">
+                    <label for="decision-process">Describe the decision making process</label>
+                    <textarea id="decision-process" rows="3" placeholder="How are decisions made? Who is involved?"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="technical-decision-makers">Technical & Graphical Decision Makers</label>
+                    <input type="text" id="technical-decision-makers" placeholder="Names and roles">
+                </div>
+                <div class="form-group">
+                    <label for="financial-decision-makers">Financial & Accounting Decision Makers</label>
+                    <input type="text" id="financial-decision-makers" placeholder="Names and roles">
+                </div>
+                <div class="form-group">
+                    <label for="final-authority">Final Authority when conflicts arise</label>
+                    <input type="text" id="final-authority" placeholder="Name and role">
+                </div>
+            </div>
+
+            <div class="key-area-section">
+                <div class="key-area-header">
+                    <div class="key-area-title">2. Spatial Information</div>
+                    <span class="completion-badge" id="spatial-badge" style="display: none;">Complete</span>
+                </div>
+                <div class="form-group">
+                    <label for="data-visualization">What and where is their data visualized?</label>
+                    <textarea id="data-visualization" rows="2" placeholder="Current systems and platforms"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="symbology-requirements">How is it visualized and any symbology requirements?</label>
+                    <textarea id="symbology-requirements" rows="2" placeholder="Current symbology and any requirements"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="projections">Projections or coordinate systems used</label>
+                    <input type="text" id="projections" placeholder="e.g., State Plane, UTM, WGS84">
+                </div>
+                <div class="form-group">
+                    <label for="projection-change-impact">Projection change impact awareness</label>
+                    <select id="projection-change-impact">
+                        <option value="">Select awareness level</option>
+                        <option value="aware">Customer is aware changes may affect data accuracy</option>
+                        <option value="unaware">Customer is not aware of potential impacts</option>
+                        <option value="needs-discussion">Needs further discussion</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="key-area-section">
+                <div class="key-area-header">
+                    <div class="key-area-title">3. Connectivity</div>
+                    <span class="completion-badge" id="connectivity-badge" style="display: none;">Complete</span>
+                </div>
+                <div class="form-group">
+                    <label for="connectivity-reference">How do they currently reference connectivity?</label>
+                    <textarea id="connectivity-reference" rows="2" placeholder="Current connectivity documentation methods"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="connectivity-storage">Where is connectivity information stored?</label>
+                    <select id="connectivity-storage">
+                        <option value="">Select storage location</option>
+                        <option value="spreadsheets">Spreadsheets</option>
+                        <option value="institutional-knowledge">Institutional Knowledge</option>
+                        <option value="third-party-system">Third Party System</option>
+                        <option value="gis">Current GIS</option>
+                        <option value="multiple">Multiple Sources</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="connectivity-completeness">Completeness of connectivity information</label>
+                    <select id="connectivity-completeness">
+                        <option value="">Select completeness level</option>
+                        <option value="complete">Complete and accurate</option>
+                        <option value="partial">Partially complete</option>
+                        <option value="incomplete">Mostly incomplete</option>
+                        <option value="unknown">Unknown</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="key-area-section">
+                <div class="key-area-header">
+                    <div class="key-area-title">4. ISP Equipment</div>
+                    <span class="completion-badge" id="isp-badge" style="display: none;">Complete</span>
+                </div>
+                <div class="form-group">
+                    <label for="isp-in-maps">Do they want ISP equipment information in the maps?</label>
+                    <select id="isp-in-maps">
+                        <option value="">Select preference</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="unsure">Unsure</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="isp-storage">If yes, where is this information currently stored?</label>
+                    <input type="text" id="isp-storage" placeholder="Current storage location">
+                </div>
+            </div>
+
+            <div class="key-area-section">
+                <div class="key-area-header">
+                    <div class="key-area-title">5. Circuit Documentation</div>
+                    <span class="completion-badge" id="circuit-badge" style="display: none;">Complete</span>
+                </div>
+                <div class="form-group">
+                    <label for="circuit-documentation">Do they currently have circuit documentation?</label>
+                    <select id="circuit-documentation">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes</option>
+                        <option value="partial">Partially</option>
+                        <option value="no">No</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="circuit-in-maps">Do they want circuit information in the map?</label>
+                    <select id="circuit-in-maps">
+                        <option value="">Select preference</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="unsure">Unsure</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="circuit-format">Where and what format is circuit information in?</label>
+                    <textarea id="circuit-format" rows="2" placeholder="Format and location details"></textarea>
+                </div>
+            </div>
+
+            <div class="key-area-section">
+                <div class="key-area-header">
+                    <div class="key-area-title">6. Customer Data</div>
+                    <span class="completion-badge" id="customer-badge" style="display: none;">Complete</span>
+                </div>
+                <div class="form-group">
+                    <label for="customer-data-tracking">How do they track their customer data?</label>
+                    <textarea id="customer-data-tracking" rows="2" placeholder="Current customer data tracking methods"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="customer-data-in-maps">Do they envision customer data being part of the map?</label>
+                    <select id="customer-data-in-maps">
+                        <option value="">Select preference</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="unsure">Unsure</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="drops-management">Do they manage drops as part of customer data or plant data?</label>
+                    <select id="drops-management">
+                        <option value="">Select approach</option>
+                        <option value="customer">Customer Data</option>
+                        <option value="plant">Plant Data</option>
+                        <option value="both">Both</option>
+                        <option value="unsure">Unsure</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="customer-data-access">Do we have access to this customer data?</label>
+                    <select id="customer-data-access">
+                        <option value="">Select access level</option>
+                        <option value="full">Full Access</option>
+                        <option value="partial">Partial Access</option>
+                        <option value="no">No Access</option>
+                        <option value="unknown">Unknown</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="key-area-section">
+                <div class="key-area-header">
+                    <div class="key-area-title">7. Implementation</div>
+                    <span class="completion-badge" id="implementation-badge" style="display: none;">Complete</span>
+                </div>
+                <div class="form-group">
+                    <label for="expected-outcome">What is the expected final outcome?</label>
+                    <textarea id="expected-outcome" rows="2" placeholder="Customer's vision for the final solution"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Implementation Type</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="impl-file-gdb" value="file-gdb">
+                            <label for="impl-file-gdb">File Geodatabase</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="impl-enterprise-gdb" value="enterprise-gdb">
+                            <label for="impl-enterprise-gdb">Enterprise Geodatabase</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="impl-crescentlink" value="crescentlink">
+                            <label for="impl-crescentlink">CrescentLink Web Experience</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="map-setup">Map Setup Requirements</label>
+                    <textarea id="map-setup" rows="2" placeholder="Projections, symbology standards, etc."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="licensing-auth">Licensing and Authentication Requirements</label>
+                    <textarea id="licensing-auth" rows="2" placeholder="Any specific licensing or authentication needs"></textarea>
+                </div>
+            </div>
+
+            <div class="stage-actions">
+                <button class="btn btn-secondary" id="save-discovery">
+                    <i class="fas fa-save"></i> Save Discovery
+                </button>
+                <button class="btn btn-accent" id="complete-discovery">
+                    <i class="fas fa-arrow-right"></i> Move to Negotiating Stage
+                </button>
+            </div>
+        </div>
+
+        <!-- NEGOTIATING STAGE -->
+        <div class="card stage-section" id="negotiating-stage">
+            <h2>Negotiating Stage <span class="completion-badge" id="negotiating-badge" style="display: none;">Complete!</span></h2>
+            
+            <div class="mop-info">
+                <h4><i class="fas fa-info-circle"></i> Stage Information</h4>
+                <p><strong>Stage Owner:</strong> Deal Owner (DO)</p>
+                <p>This stage begins when the customer asks for pricing. The DO creates the folder structure, gathers all necessary data, and creates a Service under the Deal. The PM and SE then review the information to scope the project.</p>
+            </div>
+
+            <div class="form-section">
+                <h3>Project Scoping & Estimation</h3>
+                <div class="form-group">
+                    <label for="data-received">Has all necessary data been received from the customer?</label>
+                    <select id="data-received">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes, all data received</option>
+                        <option value="partial">Partial data received</option>
+                        <option value="no">No data received yet</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="folder-created">Has the folder structure been created?</label>
+                    <select id="folder-created">
+                        <option value="">Select status</option>
+                        <option value="yes-existing">Yes, in Existing Customers folder</option>
+                        <option value="yes-prospect">Yes, in Prospects folder</option>
+                        <option value="no">Not yet created</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="service-created">Has the Service been created in the system?</label>
+                    <select id="service-created">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">Not yet</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pm-review">Has the PM reviewed the information?</label>
+                    <select id="pm-review">
+                        <option value="">Select status</option>
+                        <option value="complete">Review complete - all information available</option>
+                        <option value="needs-info">Review complete - needs additional information</option>
+                        <option value="in-progress">Review in progress</option>
+                        <option value="not-started">Not yet started</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Technical Scoping</h3>
+                <div class="form-group">
+                    <label for="ts-team-scheduled">Has the TS team been scheduled for scoping?</label>
+                    <select id="ts-team-scheduled">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes, scheduled</option>
+                        <option value="no">Not yet scheduled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="seven-components-verified">Have all 7 core components been verified?</label>
+                    <select id="seven-components-verified">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes, all verified</option>
+                        <option value="partial">Partially verified</option>
+                        <option value="no">Not yet verified</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Estimation Results</h3>
+                <div class="summary-card">
+                    <div class="summary-item">
+                        <div class="summary-label">Estimated Timeline</div>
+                        <div class="summary-value" id="estimated-timeline">0 weeks</div>
+                        <div class="summary-label" id="timeline-range"></div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Critical Path Items</div>
+                        <div class="summary-value" id="critical-items">0</div>
+                        <div class="summary-label">Requires attention</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">High-Effort Tasks</div>
+                        <div class="summary-value" id="high-effort">0</div>
+                        <div class="summary-label">Often underestimated</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Recommended Phases</div>
+                        <div class="summary-value" id="phases-count">0</div>
+                        <div class="summary-label">Migration workflow</div>
+                    </div>
+                </div>
+
+                <h3>Project Timeline</h3>
+                <div class="timeline-container">
+                    <canvas id="timeline-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="stage-actions">
+                <button class="btn btn-secondary" id="back-to-discovery">
+                    <i class="fas fa-arrow-left"></i> Back to Discovery
+                </button>
+                <button class="btn btn-accent" id="complete-negotiating">
+                    <i class="fas fa-arrow-right"></i> Generate SOW & Move to Proposal
+                </button>
+            </div>
+        </div>
+
+        <!-- PROPOSAL STAGE -->
+        <div class="card stage-section" id="proposal-stage">
+            <h2>Proposal Stage <span class="completion-badge" id="proposal-badge" style="display: none;">Complete!</span></h2>
+            
+            <div class="mop-info">
+                <h4><i class="fas fa-info-circle"></i> Stage Information</h4>
+                <p><strong>Stage Owner:</strong> Deal Owner (DO)</p>
+                <p>During this stage, the DO continues communication with the customer to push the deal to close. The SOW and Quote have been sent to the customer. Deals that go longer than 60 days without movement should be set to expire.</p>
+            </div>
+
+            <div class="form-section">
+                <h3>Proposal Status</h3>
+                <div class="form-group">
+                    <label for="sow-sent">Has the SOW been sent to the customer?</label>
+                    <select id="sow-sent">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes, sent</option>
+                        <option value="no">Not yet sent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="quote-sent">Has the Quote been sent to the customer?</label>
+                    <select id="quote-sent">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes, sent</option>
+                        <option value="no">Not yet sent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="customer-feedback">Customer feedback on proposal</label>
+                    <textarea id="customer-feedback" rows="3" placeholder="Any feedback, questions, or concerns from the customer"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="proposal-sent-date">Date proposal sent to customer</label>
+                    <input type="date" id="proposal-sent-date">
+                </div>
+            </div>
+
+            <div class="stage-actions">
+                <button class="btn btn-secondary" id="back-to-negotiating">
+                    <i class="fas fa-arrow-left"></i> Back to Negotiating
+                </button>
+                <button class="btn btn-accent" id="complete-proposal">
+                    <i class="fas fa-check"></i> Move to Closed Won
+                </button>
+            </div>
+        </div>
+
+        <!-- CLOSED WON STAGE -->
+        <div class="card stage-section" id="closed-won-stage">
+            <h2>Closed Won Stage <span class="completion-badge" id="closed-won-badge" style="display: none;">Complete!</span></h2>
+            
+            <div class="mop-info">
+                <h4><i class="fas fa-info-circle"></i> Stage Information</h4>
+                <p><strong>Stage Owner:</strong> Account Owner (AO)</p>
+                <p>Once signed Quote and SOW are received, the Deal Owner sets the Deal to Closed Won and an Account Owner is assigned. The Sales Onboarding Form is completed and sent to relevant teams.</p>
+            </div>
+
+            <div class="form-section">
+                <h3>Deal Closure</h3>
+                <div class="form-group">
+                    <label for="signed-sow-received">Has the signed SOW been received?</label>
+                    <select id="signed-sow-received">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">Not yet</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="signed-quote-received">Has the signed Quote been received?</label>
+                    <select id="signed-quote-received">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">Not yet</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="account-owner">Assigned Account Owner</label>
+                    <input type="text" id="account-owner" placeholder="Name of Account Owner">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Onboarding Preparation</h3>
+                <div class="form-group">
+                    <label for="onboarding-form-sent">Has the Sales Onboarding Form been sent?</label>
+                    <select id="onboarding-form-sent">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes, sent to all teams</option>
+                        <option value="no">Not yet sent</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="onboarding-call-scheduled">Has the onboarding call been scheduled?</label>
+                    <select id="onboarding-call-scheduled">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes, scheduled</option>
+                        <option value="no">Not yet scheduled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="software-invoices">Have software invoices been initiated?</label>
+                    <select id="software-invoices">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">Not yet</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="stage-actions">
+                <button class="btn btn-secondary" id="back-to-proposal">
+                    <i class="fas fa-arrow-left"></i> Back to Proposal
+                </button>
+                <button class="btn btn-accent" id="complete-closed-won">
+                    <i class="fas fa-check"></i> Complete Onboarding
+                </button>
+            </div>
+        </div>
+
+        <!-- PROJECT KICKOFF STAGE -->
+        <div class="card stage-section" id="kickoff-stage">
+            <h2>Project Kickoff Stage <span class="completion-badge" id="kickoff-badge" style="display: none;">Complete!</span></h2>
+            
+            <div class="mop-info">
+                <h4><i class="fas fa-info-circle"></i> Stage Information</h4>
+                <p><strong>Stage Owner:</strong> Project Manager (PM)</p>
+                <p>The PM schedules the Technical Team and communications with the Customer POC. The Service Request is converted to a Project. Any changes to the SOW require a Change Order Request.</p>
+            </div>
+
+            <div class="form-section">
+                <h3>Project Initiation</h3>
+                <div class="form-group">
+                    <label for="technical-team-scheduled">Has the Technical Team been scheduled?</label>
+                    <select id="technical-team-scheduled">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes, scheduled</option>
+                        <option value="no">Not yet scheduled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="kickoff-call-scheduled">Has the Project Kickoff call been scheduled?</label>
+                    <select id="kickoff-call-scheduled">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes, scheduled</option>
+                        <option value="no">Not yet scheduled</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="service-converted">Has the Service Request been converted to a Project?</label>
+                    <select id="service-converted">
+                        <option value="">Select status</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">Not yet</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Project Execution</h3>
+                <div class="form-group">
+                    <label for="change-orders">Any Change Order Requests submitted?</label>
+                    <select id="change-orders">
+                        <option value="">Select status</option>
+                        <option value="none">No change orders</option>
+                        <option value="pending">Pending change orders</option>
+                        <option value="approved">Approved change orders</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="project-status">Current project status</label>
+                    <select id="project-status">
+                        <option value="">Select status</option>
+                        <option value="not-started">Not yet started</option>
+                        <option value="in-progress">In progress</option>
+                        <option value="delivered">Delivered, awaiting acceptance</option>
+                        <option value="accepted">Accepted by customer</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="stage-actions">
+                <button class="btn btn-secondary" id="back-to-closed-won">
+                    <i class="fas fa-arrow-left"></i> Back to Closed Won
+                </button>
+                <button class="btn btn-accent" id="complete-kickoff">
+                    <i class="fas fa-check"></i> Complete Project
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-satellite-dish"></i> GEOGRAPH TECHNOLOGIES
+                </div>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Contact Us</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2023 Geograph Technologies. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const stageSections = document.querySelectorAll('.stage-section');
+        const steps = document.querySelectorAll('.step');
+        const progressFill = document.getElementById('progress-fill');
+        const progressPercent = document.getElementById('progress-percent');
+        
+        // Stage navigation buttons
+        const completeDiscoveryBtn = document.getElementById('complete-discovery');
+        const backToDiscoveryBtn = document.getElementById('back-to-discovery');
+        const completeNegotiatingBtn = document.getElementById('complete-negotiating');
+        const backToNegotiatingBtn = document.getElementById('back-to-negotiating');
+        const completeProposalBtn = document.getElementById('complete-proposal');
+        const backToProposalBtn = document.getElementById('back-to-proposal');
+        const completeClosedWonBtn = document.getElementById('complete-closed-won');
+        const backToClosedWonBtn = document.getElementById('back-to-closed-won');
+        const completeKickoffBtn = document.getElementById('complete-kickoff');
+        const backToKickoffBtn = document.getElementById('back-to-kickoff');
+        
+        // Current stage tracking
+        let currentStage = 'discovery';
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load any saved data
+            loadSavedData();
+            
+            // Update progress
+            updateProgress();
+            
+            // Add event listeners to all form elements to update progress
+            document.querySelectorAll('input, select, textarea').forEach(element => {
+                element.addEventListener('change', updateProgress);
+                element.addEventListener('input', updateProgress);
+            });
+            
+            // Set up stage navigation
+            setupStageNavigation();
+        });
+        
+        // Set up stage navigation
+        function setupStageNavigation() {
+            // Discovery stage
+            completeDiscoveryBtn.addEventListener('click', function() {
+                if (validateDiscoveryStage()) {
+                    moveToStage('negotiating');
+                } else {
+                    alert('Please complete all required fields in the Discovery stage before proceeding.');
+                }
+            });
+            
+            // Negotiating stage
+            backToDiscoveryBtn.addEventListener('click', function() {
+                moveToStage('discovery');
+            });
+            
+            completeNegotiatingBtn.addEventListener('click', function() {
+                if (validateNegotiatingStage()) {
+                    // Calculate estimate
+                    const timeline = calculateTimeline();
+                    updateEstimationResults(timeline);
+                    moveToStage('proposal');
+                } else {
+                    alert('Please complete all required fields in the Negotiating stage before proceeding.');
+                }
+            });
+            
+            // Proposal stage
+            backToNegotiatingBtn.addEventListener('click', function() {
+                moveToStage('negotiating');
+            });
+            
+            completeProposalBtn.addEventListener('click', function() {
+                if (validateProposalStage()) {
+                    moveToStage('closed-won');
+                } else {
+                    alert('Please complete all required fields in the Proposal stage before proceeding.');
+                }
+            });
+            
+            // Closed Won stage
+            backToProposalBtn.addEventListener('click', function() {
+                moveToStage('proposal');
+            });
+            
+            completeClosedWonBtn.addEventListener('click', function() {
+                if (validateClosedWonStage()) {
+                    moveToStage('kickoff');
+                } else {
+                    alert('Please complete all required fields in the Closed Won stage before proceeding.');
+                }
+            });
+            
+            // Kickoff stage
+            backToClosedWonBtn.addEventListener('click', function() {
+                moveToStage('closed-won');
+            });
+            
+            completeKickoffBtn.addEventListener('click', function() {
+                if (validateKickoffStage()) {
+                    alert('Project completed successfully!');
+                    // In a real implementation, this would trigger final invoices and project closure
+                } else {
+                    alert('Please complete all required fields in the Project Kickoff stage before proceeding.');
+                }
+            });
+        }
+        
+        // Move to a specific stage
+        function moveToStage(stage) {
+            // Hide all stages
+            stageSections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all steps
+            steps.forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Show the target stage
+            document.getElementById(`${stage}-stage`).classList.add('active');
+            
+            // Activate the target step
+            document.getElementById(`step-${stage}`).classList.add('active');
+            
+            // Update current stage
+            currentStage = stage;
+            
+            // Update progress
+            updateProgress();
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+        
+        // Update progress based on current stage and completion
+        function updateProgress() {
+            let progress = 0;
+            
+            switch(currentStage) {
+                case 'discovery':
+                    progress = calculateDiscoveryProgress();
+                    break;
+                case 'negotiating':
+                    progress = 25 + calculateNegotiatingProgress() * 0.25;
+                    break;
+                case 'proposal':
+                    progress = 50 + calculateProposalProgress() * 0.25;
+                    break;
+                case 'closed-won':
+                    progress = 75 + calculateClosedWonProgress() * 0.25;
+                    break;
+                case 'kickoff':
+                    progress = 100;
+                    break;
+            }
+            
+            progressFill.style.width = `${progress}%`;
+            progressPercent.textContent = `${Math.round(progress)}%`;
+            
+            // Update completion badges
+            updateCompletionBadges();
+        }
+        
+        // Calculate discovery stage progress
+        function calculateDiscoveryProgress() {
+            const requiredFields = [
+                'company-name', 'contact-name', 'contact-role',
+                'decision-process', 'technical-decision-makers', 'financial-decision-makers', 'final-authority',
+                'data-visualization', 'symbology-requirements', 'projections', 'projection-change-impact',
+                'connectivity-reference', 'connectivity-storage', 'connectivity-completeness',
+                'isp-in-maps', 'isp-storage',
+                'circuit-documentation', 'circuit-in-maps', 'circuit-format',
+                'customer-data-tracking', 'customer-data-in-maps', 'drops-management', 'customer-data-access',
+                'expected-outcome', 'map-setup', 'licensing-auth'
+            ];
+            
+            let completed = 0;
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && field.value && field.value !== '') {
+                    completed++;
+                }
+            });
+            
+            // Check implementation type checkboxes
+            const implCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="impl-"]:checked');
+            if (implCheckboxes.length > 0) completed++;
+            
+            return (completed / (requiredFields.length + 1)) * 100;
+        }
+        
+        // Calculate negotiating stage progress
+        function calculateNegotiatingProgress() {
+            const requiredFields = [
+                'data-received', 'folder-created', 'service-created', 'pm-review',
+                'ts-team-scheduled', 'seven-components-verified'
+            ];
+            
+            let completed = 0;
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && field.value && field.value !== '') {
+                    completed++;
+                }
+            });
+            
+            return (completed / requiredFields.length) * 100;
+        }
+        
+        // Calculate proposal stage progress
+        function calculateProposalProgress() {
+            const requiredFields = [
+                'sow-sent', 'quote-sent', 'customer-feedback', 'proposal-sent-date'
+            ];
+            
+            let completed = 0;
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && field.value && field.value !== '') {
+                    completed++;
+                }
+            });
+            
+            return (completed / requiredFields.length) * 100;
+        }
+        
+        // Calculate closed won stage progress
+        function calculateClosedWonProgress() {
+            const requiredFields = [
+                'signed-sow-received', 'signed-quote-received', 'account-owner',
+                'onboarding-form-sent', 'onboarding-call-scheduled', 'software-invoices'
+            ];
+            
+            let completed = 0;
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && field.value && field.value !== '') {
+                    completed++;
+                }
+            });
+            
+            return (completed / requiredFields.length) * 100;
+        }
+        
+        // Calculate kickoff stage progress
+        function calculateKickoffProgress() {
+            const requiredFields = [
+                'technical-team-scheduled', 'kickoff-call-scheduled', 'service-converted',
+                'change-orders', 'project-status'
+            ];
+            
+            let completed = 0;
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && field.value && field.value !== '') {
+                    completed++;
+                }
+            });
+            
+            return (completed / requiredFields.length) * 100;
+        }
+        
+        // Update completion badges for each key area
+        function updateCompletionBadges() {
+            // Decision Making Process
+            const decisionFields = ['decision-process', 'technical-decision-makers', 'financial-decision-makers', 'final-authority'];
+            const decisionCompleted = decisionFields.every(fieldId => {
+                const field = document.getElementById(fieldId);
+                return field && field.value && field.value !== '';
+            });
+            document.getElementById('decision-badge').style.display = decisionCompleted ? 'inline-block' : 'none';
+            
+            // Spatial Information
+            const spatialFields = ['data-visualization', 'symbology-requirements', 'projections', 'projection-change-impact'];
+            const spatialCompleted = spatialFields.every(fieldId => {
+                const field = document.getElementById(fieldId);
+                return field && field.value && field.value !== '';
+            });
+            document.getElementById('spatial-badge').style.display = spatialCompleted ? 'inline-block' : 'none';
+            
+            // Connectivity
+            const connectivityFields = ['connectivity-reference', 'connectivity-storage', 'connectivity-completeness'];
+            const connectivityCompleted = connectivityFields.every(fieldId => {
+                const field = document.getElementById(fieldId);
+                return field && field.value && field.value !== '';
+            });
+            document.getElementById('connectivity-badge').style.display = connectivityCompleted ? 'inline-block' : 'none';
+            
+            // ISP Equipment
+            const ispFields = ['isp-in-maps', 'isp-storage'];
+            const ispCompleted = ispFields.every(fieldId => {
+                const field = document.getElementById(fieldId);
+                return field && field.value && field.value !== '';
+            });
+            document.getElementById('isp-badge').style.display = ispCompleted ? 'inline-block' : 'none';
+            
+            // Circuit Documentation
+            const circuitFields = ['circuit-documentation', 'circuit-in-maps', 'circuit-format'];
+            const circuitCompleted = circuitFields.every(fieldId => {
+                const field = document.getElementById(fieldId);
+                return field && field.value && field.value !== '';
+            });
+            document.getElementById('circuit-badge').style.display = circuitCompleted ? 'inline-block' : 'none';
+            
+            // Customer Data
+            const customerFields = ['customer-data-tracking', 'customer-data-in-maps', 'drops-management', 'customer-data-access'];
+            const customerCompleted = customerFields.every(fieldId => {
+                const field = document.getElementById(fieldId);
+                return field && field.value && field.value !== '';
+            });
+            document.getElementById('customer-badge').style.display = customerCompleted ? 'inline-block' : 'none';
+            
+            // Implementation
+            const implementationFields = ['expected-outcome', 'map-setup', 'licensing-auth'];
+            const implementationCompleted = implementationFields.every(fieldId => {
+                const field = document.getElementById(fieldId);
+                return field && field.value && field.value !== '';
+            }) && document.querySelectorAll('input[type="checkbox"][id^="impl-"]:checked').length > 0;
+            document.getElementById('implementation-badge').style.display = implementationCompleted ? 'inline-block' : 'none';
+            
+            // Stage completion badges
+            const discoveryProgress = calculateDiscoveryProgress();
+            document.getElementById('discovery-badge').style.display = discoveryProgress >= 90 ? 'inline-block' : 'none';
+            
+            const negotiatingProgress = calculateNegotiatingProgress();
+            document.getElementById('negotiating-badge').style.display = negotiatingProgress >= 90 ? 'inline-block' : 'none';
+            
+            const proposalProgress = calculateProposalProgress();
+            document.getElementById('proposal-badge').style.display = proposalProgress >= 90 ? 'inline-block' : 'none';
+            
+            const closedWonProgress = calculateClosedWonProgress();
+            document.getElementById('closed-won-badge').style.display = closedWonProgress >= 90 ? 'inline-block' : 'none';
+            
+            const kickoffProgress = calculateKickoffProgress();
+            document.getElementById('kickoff-badge').style.display = kickoffProgress >= 90 ? 'inline-block' : 'none';
+        }
+        
+        // Validation functions for each stage
+        function validateDiscoveryStage() {
+            const requiredFields = [
+                'company-name', 'contact-name', 'contact-role',
+                'decision-process', 'technical-decision-makers', 'financial-decision-makers', 'final-authority',
+                'data-visualization', 'symbology-requirements', 'projections', 'projection-change-impact',
+                'connectivity-reference', 'connectivity-storage', 'connectivity-completeness',
+                'isp-in-maps', 'isp-storage',
+                'circuit-documentation', 'circuit-in-maps', 'circuit-format',
+                'customer-data-tracking', 'customer-data-in-maps', 'drops-management', 'customer-data-access',
+                'expected-outcome', 'map-setup', 'licensing-auth'
+            ];
+            
+            for (let fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value || field.value === '') {
+                    return false;
+                }
+            }
+            
+            // Check implementation type checkboxes
+            const implCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="impl-"]:checked');
+            if (implCheckboxes.length === 0) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function validateNegotiatingStage() {
+            const requiredFields = [
+                'data-received', 'folder-created', 'service-created', 'pm-review',
+                'ts-team-scheduled', 'seven-components-verified'
+            ];
+            
+            for (let fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value || field.value === '') {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        function validateProposalStage() {
+            const requiredFields = [
+                'sow-sent', 'quote-sent', 'proposal-sent-date'
+            ];
+            
+            for (let fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value || field.value === '') {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        function validateClosedWonStage() {
+            const requiredFields = [
+                'signed-sow-received', 'signed-quote-received', 'account-owner',
+                'onboarding-form-sent', 'onboarding-call-scheduled'
+            ];
+            
+            for (let fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value || field.value === '') {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        function validateKickoffStage() {
+            const requiredFields = [
+                'technical-team-scheduled', 'kickoff-call-scheduled', 'service-converted',
+                'project-status'
+            ];
+            
+            for (let fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value || field.value === '') {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        // Calculate timeline based on discovery information
+        function calculateTimeline() {
+            let totalWeeks = 8; // Base timeline
+            
+            const factors = [];
+            const criticalItems = [];
+            const highEffortTasks = [];
+            
+            // Adjust based on data complexity
+            const connectivityCompleteness = document.getElementById('connectivity-completeness').value;
+            if (connectivityCompleteness === 'incomplete' || connectivityCompleteness === 'unknown') {
+                totalWeeks += 2;
+                factors.push({ description: 'Incomplete connectivity information', weeks: 2 });
+                criticalItems.push('Connectivity information needs significant work');
+            }
+            
+            // Adjust based on data sources
+            const connectivityStorage = document.getElementById('connectivity-storage').value;
+            if (connectivityStorage === 'spreadsheets' || connectivityStorage === 'institutional-knowledge') {
+                totalWeeks += 1;
+                factors.push({ description: 'Data extraction from non-GIS sources', weeks: 1 });
+                highEffortTasks.push('Data transformation from spreadsheets/knowledge');
+            }
+            
+            // Adjust based on ISP equipment requirements
+            const ispInMaps = document.getElementById('isp-in-maps').value;
+            if (ispInMaps === 'yes') {
+                totalWeeks += 1;
+                factors.push({ description: 'ISP equipment integration', weeks: 1 });
+            }
+            
+            // Adjust based on circuit documentation
+            const circuitDocumentation = document.getElementById('circuit-documentation').value;
+            if (circuitDocumentation === 'no') {
+                totalWeeks += 2;
+                factors.push({ description: 'Circuit documentation creation', weeks: 2 });
+                criticalItems.push('Circuit documentation needs to be created');
+            } else if (circuitDocumentation === 'partial') {
+                totalWeeks += 1;
+                factors.push({ description: 'Circuit documentation completion', weeks: 1 });
+            }
+            
+            // Adjust based on customer data integration
+            const customerDataInMaps = document.getElementById('customer-data-in-maps').value;
+            if (customerDataInMaps === 'yes') {
+                totalWeeks += 2;
+                factors.push({ description: 'Customer data integration', weeks: 2 });
+                highEffortTasks.push('Customer data mapping and validation');
+            }
+            
+            // Adjust based on implementation complexity
+            const implEnterprise = document.getElementById('impl-enterprise-gdb').checked;
+            const implCrescentlink = document.getElementById('impl-crescentlink').checked;
+            
+            if (implEnterprise) {
+                totalWeeks += 2;
+                factors.push({ description: 'Enterprise GDB implementation', weeks: 2 });
+            }
+            
+            if (implCrescentlink) {
+                totalWeeks += 3;
+                factors.push({ description: 'CrescentLink web implementation', weeks: 3 });
+            }
+            
+            return {
+                totalWeeks,
+                factors,
+                criticalItems,
+                highEffortTasks
+            };
+        }
+        
+        // Update estimation results in the negotiating stage
+        function updateEstimationResults(timeline) {
+            document.getElementById('estimated-timeline').textContent = `${timeline.totalWeeks} weeks`;
+            document.getElementById('timeline-range').textContent = `(~${Math.round(timeline.totalWeeks/4)} months)`;
+            document.getElementById('critical-items').textContent = timeline.criticalItems.length;
+            document.getElementById('high-effort').textContent = timeline.highEffortTasks.length;
+            
+            // Calculate phases count
+            let phasesCount = 4; // Base phases
+            if (timeline.criticalItems.length > 0) phasesCount++;
+            document.getElementById('phases-count').textContent = phasesCount;
+            
+            // Create Gantt chart
+            createGanttChart(timeline.totalWeeks);
+        }
+        
+        // Create Gantt chart visualization
+        function createGanttChart(totalWeeks) {
+            const ctx = document.getElementById('timeline-chart').getContext('2d');
+            
+            // Calculate phase durations
+            const phases = [
+                {
+                    phase: 'Phase 1: Discovery & Analysis',
+                    duration: 2,
+                    color: 'rgba(106, 13, 173, 0.7)'
+                },
+                {
+                    phase: 'Phase 2: Data Preparation',
+                    duration: Math.round(totalWeeks * 0.3),
+                    color: 'rgba(138, 79, 191, 0.7)'
+                },
+                {
+                    phase: 'Phase 3: Migration & Testing',
+                    duration: Math.round(totalWeeks * 0.4),
+                    color: 'rgba(170, 120, 220, 0.7)'
+                },
+                {
+                    phase: 'Phase 4: Implementation & Training',
+                    duration: Math.round(totalWeeks * 0.2),
+                    color: 'rgba(190, 150, 230, 0.7)'
+                },
+                {
+                    phase: 'Phase 5: Acceptance & Handoff',
+                    duration: 1,
+                    color: 'rgba(210, 180, 240, 0.7)'
+                }
+            ];
+            
+            // Create chart
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: phases.map(p => p.phase),
+                    datasets: [{
+                        label: 'Weeks',
+                        data: phases.map(p => p.duration),
+                        backgroundColor: phases.map(p => p.color),
+                        borderColor: phases.map(p => p.color.replace('0.7', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Project Timeline (Weeks)'
+                        },
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Duration: ${context.parsed.x} weeks`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Weeks'
+                            }
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+        
+        // Save data to localStorage
+        function saveData() {
+            const formData = {};
+            
+            // Get all form values
+            document.querySelectorAll('input, select, textarea').forEach(element => {
+                if (element.type === 'checkbox') {
+                    formData[element.id] = element.checked;
+                } else {
+                    formData[element.id] = element.value;
+                }
+            });
+            
+            // Save current stage
+            formData.currentStage = currentStage;
+            
+            localStorage.setItem('geographEstimator', JSON.stringify(formData));
+        }
+        
+        // Load data from localStorage
+        function loadSavedData() {
+            const savedData = localStorage.getItem('geographEstimator');
+            if (savedData) {
+                const formData = JSON.parse(savedData);
+                
+                // Set all form values
+                Object.keys(formData).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        if (element.type === 'checkbox') {
+                            element.checked = formData[key];
+                        } else {
+                            element.value = formData[key];
+                        }
+                    }
+                });
+                
+                // Set current stage
+                if (formData.currentStage) {
+                    moveToStage(formData.currentStage);
+                }
+            }
+        }
+        
+        // Auto-save when form values change
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('change', saveData);
+        });
+    </script>
+</body>
+</html>
